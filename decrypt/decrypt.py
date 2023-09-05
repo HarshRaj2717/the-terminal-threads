@@ -7,4 +7,5 @@ def decrypt_frame(encrypted_image: numpy.ndarray, key: str = "") -> numpy.ndarra
 
     Returns the decrypted `secret_image`
     """
-    ...
+
+    # TODO add a function for using the key also
