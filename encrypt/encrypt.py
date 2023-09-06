@@ -1,6 +1,6 @@
+import cv2
 import numpy as np
 from PIL import Image
-import cv2
 
 
 def distort_image(image: np.ndarray, key: str) -> np.ndarray:
@@ -13,7 +13,9 @@ def distort_image(image: np.ndarray, key: str) -> np.ndarray:
     return image
 
 
-def encrypt_frame(mask_image: np.ndarray, secret_image: np.ndarray, bitcount: int, key: str = "") -> np.ndarray:
+def encrypt_frame(
+    mask_image: np.ndarray, secret_image: np.ndarray, bitcount: int, key: str = ""
+) -> np.ndarray:
     """
     Encrypt the `secret_image` using `key` and hide it inside `mask_image`
 
@@ -26,7 +28,15 @@ def encrypt_frame(mask_image: np.ndarray, secret_image: np.ndarray, bitcount: in
     # If the mask image is bigger than secret image, take a subsection (top-left corner)
     if mask_image.size > secret_image.size:
         (y, x) = secret_image.shape[:2]
-        resized_secret_image = cv2.copyMakeBorder(secret_image,0,mask_image.shape[0] - y,0,mask_image.shape[1] - x,cv2.BORDER_CONSTANT,0)
+        resized_secret_image = cv2.copyMakeBorder(
+            secret_image,
+            0,
+            mask_image.shape[0] - y,
+            0,
+            mask_image.shape[1] - x,
+            cv2.BORDER_CONSTANT,
+            0,
+        )
         Image.fromarray(resized_secret_image).save("samples\\resized.png")
     else:
         resized_secret_image = secret_image
@@ -35,25 +45,32 @@ def encrypt_frame(mask_image: np.ndarray, secret_image: np.ndarray, bitcount: in
 
     # TODO go through each pixel
     # and insert most significatnt bits of secret_image into least significant bits of mask_image
-    for height in range(resized_secret_image.shape[0]):
-        for width in range(resized_secret_image.shape[1]):
-            for channel in range(resized_secret_image.shape[2]):
-                secret_bits = list(f"{resized_secret_image[height][width][channel]:b}")
-                mask_bits = list(f"{mask_image[height][width][channel]:b}")
 
-                while (len(secret_bits) < 8):
-                    # making the length equal to 8 by adding zeros in starting
-                    # so that we don't indexErrors
-                    secret_bits = ['0'] + secret_bits
-                while (len(mask_bits) < 8):
-                    # making the length equal to 8 by adding zeros in starting
-                    # so that we don't indexErrors
-                    mask_bits = ['0'] + mask_bits
-                # put 2 most signicant bits of secret pixels
-                # at place of 2 least significant bits of mask pixels
+    # takes the nth most/least significant bits
 
-                for i in range(bitcount):
-                    mask_bits[7-i] = secret_bits[i]
-                mask_image[height][width][channel] = int("".join(mask_bits), 2)
+    secret_bits = secret_image >> (8 - bitcount)
+    mask_bits = (mask_image >> bitcount) << bitcount
+    mask_image = mask_bits | secret_bits
+    print(np.max(mask_image))
+    # for height in range(resized_secret_image.shape[0]):
+    #     for width in range(resized_secret_image.shape[1]):
+    #         for channel in range(resized_secret_image.shape[2]):
+    #             secret_bits = list(f"{resized_secret_image[height][width][channel]:b}")
+    #             mask_bits = list(f"{mask_image[height][width][channel]:b}")
+
+    #             while (len(secret_bits) < 8):
+    #                 # making the length equal to 8 by adding zeros in starting
+    #                 # so that we don't indexErrors
+    #                 secret_bits = ['0'] + secret_bits
+    #             while (len(mask_bits) < 8):
+    #                 # making the length equal to 8 by adding zeros in starting
+    #                 # so that we don't indexErrors
+    #                 mask_bits = ['0'] + mask_bits
+    #             # put 2 most signicant bits of secret pixels
+    #             # at place of 2 least significant bits of mask pixels
+
+    #             for i in range(bitcount):
+    #                 mask_bits[7-i] = secret_bits[i]
+    #             mask_image[height][width][channel] = int("".join(mask_bits), 2)
 
     return mask_image
