@@ -2,6 +2,11 @@ import os
 
 import cv2
 
+from decrypt.decrypt import decrypt_frame
+from encrypt.encrypt import encrypt_frame
+
+# from PIL import Image
+
 
 class VideoExtractor(object):
     """Function of this class is to extract frames from a video"""
@@ -71,6 +76,7 @@ class VideoMerger(object):
     def __init__(self, base_video_path, secret_video_path, secret_key) -> None:
         self.base_video_obj = VideoExtractor(base_video_path)
         self.secret_video_obj = VideoExtractor(secret_video_path)
+        self.output_video = None
         self.secret_key = secret_key
         self.encoded_frames = []
 
@@ -98,16 +104,19 @@ class VideoMerger(object):
     def encode_video(self):
         """Encodes videos."""
         self.perform_validation()
-        current_frame = 0
-
-        while self.base_video_obj.frame_count != current_frame:
+        c = 0
+        thresh = min((self.base_video_obj.frame_count, self.secret_video_obj.frame_count))
+        while thresh != c:
 
             # call encoder here
-            self.encoded_frames.append(self.base_video_obj.frames[current_frame])
+            enc_arr = encrypt_frame(self.base_video_obj.frames[c], self.secret_video_obj.frames[c], 4, self.secret_key)
+            # enc_arr = cv2.cvtColor(enc_arr, cv2.COLOR_BGR2RGB)
 
-            current_frame += 1
+            self.encoded_frames.append(enc_arr)
 
-        out = cv2.VideoWriter('output.avi', cv2.VideoWriter_fourcc(*'DIVX'), self.base_video_obj.fps,
+            c += 1
+
+        out = cv2.VideoWriter('samples/output.avi', cv2.VideoWriter_fourcc(*'DIVX'), self.base_video_obj.fps,
                               (self.base_video_obj.width, self.base_video_obj.height))
 
         print("Writing to output")
@@ -116,8 +125,17 @@ class VideoMerger(object):
         out.release()
         print("Writing to output - DONE")
 
-
-if __name__ == "__main__":
-
-    video_merger = VideoMerger("sample.mp4", "sample.mp4", "")
-    video_merger.encode_video()
+    def decode_video(self):
+        """Decodes videos"""
+        self.output_video = VideoExtractor("samples/output.avi")
+        self.output_video.extract_frames()
+        dec = []
+        for frames in self.output_video.frames:
+            dec.append(decrypt_frame(frames, 4, self.secret_key))
+        out = cv2.VideoWriter('samples/decoded_output.avi', cv2.VideoWriter_fourcc(*'DIVX'), self.output_video.fps,
+                              (self.output_video.width, self.output_video.height))
+        print("Writing to decoded_video")
+        for img in dec:
+            out.write(img)
+        out.release()
+        print("Writing to decoded_video - DONE")
