@@ -1,17 +1,19 @@
 import numpy as np
 
 
-def decrypt_frame(encrypted_image: np.ndarray, bitcount: int, key: str = "") -> np.ndarray:
+def decrypt_frame(encrypted_image: np.ndarray, bitcount: int, secret_code: int = 1) -> np.ndarray:
     """
     Retrieve the hidden `secret_image` from `encrypted_image` and decrypt it using `key`
 
     Returns the decrypted `secret_image`
     """
-    # TODO add a function for using the key also
+    # unhide secret image from encrypted_image by reversing the hiding process
+    encrypted_image = encrypted_image & int('1'*bitcount, 2)
+    encrypted_image = encrypted_image << (8 - bitcount)
 
-    decrypted_image = encrypted_image.copy()
+    # undistort the image using the secret_code
+    rng = np.random.default_rng(secret_code)
+    shuffled_indices = rng.permutation(len(encrypted_image))
+    encrypted_image = encrypted_image[np.argsort(shuffled_indices)]
 
-    decrypted_image = decrypted_image & int('1'*bitcount, 2)
-    decrypted_image = decrypted_image << (8 - bitcount)
-
-    return decrypted_image
+    return encrypted_image
