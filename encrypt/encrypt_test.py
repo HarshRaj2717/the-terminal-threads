@@ -2,8 +2,8 @@ import cv2
 
 import encrypt
 
-MASK_IMAGE_PATH = "samples/mask_highres.png"
-SECRET_IMAGE_PATH = "samples/secret_highres.png"
+MASK_IMAGE_PATH = "samples/images/high_res/mask_highres.png"
+SECRET_IMAGE_PATH = "samples/images/high_res/secret_highres.png"
 SECRET_CODE = 1
 
 mask_array = cv2.imread(MASK_IMAGE_PATH, flags=1)
