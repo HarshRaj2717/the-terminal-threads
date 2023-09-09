@@ -116,7 +116,7 @@ class VideoMerger(object):
 
             c += 1
 
-        out = cv2.VideoWriter('samples/output.avi', cv2.VideoWriter_fourcc(*'DIVX'), self.base_video_obj.fps,
+        out = cv2.VideoWriter('samples/output.avi', cv2.VideoWriter_fourcc(*'FFV1'), self.base_video_obj.fps,
                               (self.base_video_obj.width, self.base_video_obj.height))
 
         print("Writing to output")
@@ -132,7 +132,7 @@ class VideoMerger(object):
         dec = []
         for frames in self.output_video.frames:
             dec.append(decrypt_frame(frames, 4, self.secret_key))
-        out = cv2.VideoWriter('samples/decoded_output.avi', cv2.VideoWriter_fourcc(*'DIVX'), self.output_video.fps,
+        out = cv2.VideoWriter('samples/decoded_output.avi', cv2.VideoWriter_fourcc(*'FFV1'), self.output_video.fps,
                               (self.output_video.width, self.output_video.height))
         print("Writing to decoded_video")
         for img in dec:
