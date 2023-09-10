@@ -1,12 +1,9 @@
 from image_handler.image_handler import ImageHandler
+from vid_handler.frame_extraction import VideoMerger
 
 # v = VideoMerger("samples/videos/base.mp4", "samples/videos/secret.mp4", 1)
 # v.encode_video()
 # v.decode_video()
-
-# im = ImageHandler(2)
-# im.encode_image("samples/images/high_res/secret_highres.png", "samples/images/high_res/mask_highres.png")
-# im.decode_image("samples/output.png")
 
 
 def take_user_choice(max_choices: int, msg: str) -> str:
@@ -30,7 +27,8 @@ def main():
         user_choice = take_user_choice(3, '''What would you like to do now?
 
 [1] Encrypt/Decrypt Images
-[2] Encrypt/Decrypt Videos
+[2] Encrypt/Decrypt Videos \
+(Warning: This can take up a lot of RAM hence prefer running it for shorter videos if you have low RAM)
 [3] Quit!''')
 
         if user_choice == '3':
@@ -78,7 +76,37 @@ def main():
 [1] Encrypt Video
 [2] Decrypt Video
 [3] Go Back!''')
-            # TODO
+            if user_choice == '1':
+                mask_video_path = input("\nEnter path to mask video \
+(sample mask video path: \"samples/videos/mask.mp4\" ): ")
+                secret_video_path = input("\nEnter path to secret video \
+(sample mask video path: \"samples/videos/secret.mp4\" ): ")
+                bitcount = int(input("Enter a bitcount \
+(must be an integer in inclusive range [1, 8], suggested is 4): "))
+                secret_code = int(input("Enter a secret code \
+(must be an integer): "))
+
+                video_handeler = VideoMerger(secret_code, bitcount)
+                video_handeler.encode_video(mask_video_path, secret_video_path)
+
+                print("\n\n\nYayy!! Your video have been encrypted and saved to \"samples/output.avi\"")
+                _ = input("Press enter to continue...")
+                print("\n\n\n")
+
+            elif user_choice == '2':
+                video_path = input("\nEnter path to mask video \
+(sample video path if you have encrypted any video before: \"samples/output.avi\" ): ")
+                bitcount = int(input("Enter a bitcount \
+(must be an integer same as the one used for encrypting for correct outputs): "))
+                secret_code = int(input("Enter a secret code \
+(must be an integer same as the one used for encrypting for correct outputs): "))
+
+                video_handeler = VideoMerger(secret_code, bitcount)
+                video_handeler.decode_video(video_path)
+
+                print("\n\n\nYayy!! Your video have been decrypted and saved to \"samples/output_decrypted.avi\"")
+                _ = input("Press enter to continue...")
+                print("\n\n\n")
 
 
 if __name__ == "__main__":
