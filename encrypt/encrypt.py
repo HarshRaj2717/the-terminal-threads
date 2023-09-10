@@ -1,26 +1,30 @@
 import numpy as np
+import cv2
 
-
-def encrypt_frame(mask_image: np.ndarray, secret_image: np.ndarray, bitcount: int, secret_code: int = 1) -> np.ndarray:
+def encrypt_frame(mask_imgpath: str, secret_imgpath: str,output_path:str, bitcount: int = 3, secret_code: int = 1,) -> np.ndarray:
     """
     Encrypt the `secret_image` using `key` and hide it inside `mask_image`
 
     Returns the updated `mask_image`
     """
+
+    mask_array = cv2.imread(mask_imgpath, flags=1)
+    secret_array = cv2.imread(secret_imgpath, flags=1)
+
     # If the mask image is bigger than secret image, take a subsection (top-left corner)
-    if mask_image.size > secret_image.size:
-        secret_copy = secret_image.copy()
-        secret_image = np.zeros(mask_image.shape, mask_image.dtype)
-        secret_image[:secret_copy.shape[0], :secret_copy.shape[1], :] = secret_copy
+    if mask_array.size > secret_array.size:
+        secret_copy = secret_array.copy()
+        secret_array = np.zeros(mask_array.shape, mask_array.dtype)
+        secret_array[:secret_copy.shape[0], :secret_copy.shape[1], :] = secret_copy
 
     # distort the secret image using secret_code
     rng = np.random.default_rng(secret_code)
-    shuffled_indices = rng.permutation(len(secret_image))
-    secret_image = secret_image[shuffled_indices]
+    shuffled_indices = rng.permutation(len(secret_array))
+    secret_array = secret_array[shuffled_indices]
 
     # hide secret image inside mask image using bit manipulation
-    secret_image = secret_image >> (8 - bitcount)
-    mask_image = (mask_image >> bitcount) << bitcount
-    mask_image = mask_image | secret_image
-
-    return mask_image
+    secret_array = secret_array >> (8 - bitcount)
+    mask_array = (mask_array >> bitcount) << bitcount
+    mask_array = mask_array | secret_array
+    cv2.imwrite(output_path,mask_array)
+    return mask_array
