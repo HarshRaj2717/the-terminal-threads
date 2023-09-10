@@ -14,9 +14,6 @@ cached_images = {}
 cached_imgpaths = {}
 
 
-
-
-
 class MainWindow(tk.Tk):
 
     def __init__(self, *args, **kwargs):
@@ -28,7 +25,7 @@ class MainWindow(tk.Tk):
         root.pack(side="top", fill="both", expand=True)
 
         self.frames = {}
-        for F in (ImportFrame, EncryptFrame, DecryptFrame):
+        for F in (ImportFrame, EncryptFrame,DecryptFrame):
             frame = F(root, self)
             self.frames[F] = frame
             frame.pack_forget()
@@ -100,7 +97,7 @@ class ImportFrame(tk.Frame):
             self,
             text="Import Images/Videos First!",
             command=lambda: self.switch_to_encrypt_frame(controller),
-            state=tk.DISABLED
+            # state=tk.DISABLED
         )
 
         
@@ -120,6 +117,10 @@ class ImportFrame(tk.Frame):
         cached_images[label] = ImageTk.PhotoImage(image=Image.open(path).resize((320,180)))
         cached_imgpaths[label] = path
         img_to_update.config(image=cached_images[label],width=320,height=180)
+        self.create_other_frames()
+
+    def create_other_frames(self):
+        ...
 
 
 class EncryptFrame(tk.Frame):
