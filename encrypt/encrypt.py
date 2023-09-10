@@ -2,7 +2,7 @@ import numpy as np
 
 
 def encrypt_frame(
-        mask_array: np.ndarray, secret_array: np.ndarray, secret_code: int = 1, bitcount: int = 4) -> np.ndarray:
+        mask_array: np.ndarray, secret_array: np.ndarray, bitcount: int = 4, secret_code: int = 1) -> np.ndarray:
     """
     Encrypt the `secret_image` using `key` and hide it inside `mask_image`
 
