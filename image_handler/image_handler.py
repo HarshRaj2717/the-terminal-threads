@@ -14,8 +14,9 @@ class ImageHandler:
     and decoding a secret image from given image.
     """
 
-    def __init__(self, secret_key) -> None:
-        self.secret_key = secret_key
+    def __init__(self, secret_code: int, bitcount: int) -> None:
+        self.secret_code = secret_code
+        self.bitcount = bitcount
 
     def _check_file_exists(self, path) -> bool:
         if os.path.exists(path):
@@ -56,7 +57,7 @@ class ImageHandler:
         secret_image_ndarray = np.array(secret_image)
         mask_image_ndarray = np.array(mask_image)
 
-        encoded_image_array = encrypt_frame(mask_image_ndarray, secret_image_ndarray, 4, self.secret_key)
+        encoded_image_array = encrypt_frame(mask_image_ndarray, secret_image_ndarray, self.bitcount, self.secret_code)
         encoded_image = Image.fromarray(encoded_image_array)
         encoded_image.save("samples/output.png")
 
@@ -65,6 +66,6 @@ class ImageHandler:
         image = self.read_image(image_path)
         image_as_array = np.array(image)
 
-        decoded_image_array = decrypt_frame(image_as_array, 4, self.secret_key)
+        decoded_image_array = decrypt_frame(image_as_array, self.bitcount, self.secret_code)
         decoded_image = Image.fromarray(decoded_image_array)
-        decoded_image.save("samples/decoded_output.png")
+        decoded_image.save("samples/output_decrypted.png")
