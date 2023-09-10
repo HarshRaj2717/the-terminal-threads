@@ -79,7 +79,7 @@ class ImportFrame(tk.Frame):
         secret_filepath_lbl.grid(column=0,row=0,padx=5,pady=5)
 
         secret_file_btn = tk.Button(secret_frame, image=self.open_file_img, command=lambda: self.open_file(
-        self.secret_filepath, self.secretImage, "secret_image"))
+        self.secret_filepath, self.secretImage, "secret"))
         secret_file_btn.grid(column=2,row=0,padx=5)
 
         self.secretImage = tk.Label(secret_frame,width=45,height=12)
@@ -92,7 +92,7 @@ class ImportFrame(tk.Frame):
         mask_filepath_lbl.grid(column=0,row=0,padx=5,pady=5)
 
         mask_file_btn = tk.Button(mask_frame, image=self.open_file_img, command=lambda: self.open_file(
-        self.mask_filepath,self.maskImage,'mask_image'))
+        self.mask_filepath,self.maskImage,'mask'))
         mask_file_btn.grid(column=2,row=0,padx=5)
 
         self.maskImage = tk.Label(mask_frame, bg='blue',width=45,height=12)
@@ -118,15 +118,17 @@ class ImportFrame(tk.Frame):
         self.load_file(label_for_cache,file_path_str,img_widget)
 
     def load_file(self,label,filepathStr,img_to_update):
+        global imageorvideo
         path = filepathStr.get()
         if path[-4:] == ".png":
+            imageorvideo = 'image'
             cached_files[label] = ImageTk.PhotoImage(image=Image.open(path).resize((320,180)))
             cached_filepaths[label] = path
             img_to_update.config(image=cached_files[label],width=320,height=180)
             if self.mask_filepath.get() != "" and self.secret_filepath.get() != "":
                 self.encrypt_window_button.config(state=tk.NORMAL,text="Ready To Encrypt!")
         elif filepathStr.get()[-4:] == ".mp4":
-
+            imageorvideo = 'video'
             # frame_extracter = frame_extraction.VideoExtractor.extract_frames()
             cached_filepaths[label] = path
             if self.mask_filepath.get() != "" and self.secret_filepath.get() != "":
@@ -164,10 +166,10 @@ class EncryptFrame(tk.Frame):
         encrypt_button.pack(side=tk.TOP, anchor='n', padx=5, pady=10)
 
         self.secretImage = tk.Label(img_frame, bg="green")
-        self.secretImage.pack(side=tk.TOP, anchor='w', fill='both',padx=10,pady=10)
+        self.secretImage.pack(side=tk.BOTTOM, anchor='w', fill='both',padx=10,pady=10)
 
         self.maskImage = tk.Label(img_frame, bg='blue')
-        self.maskImage.pack(side=tk.TOP, anchor='e', fill="both",padx=10,pady=10)
+        self.maskImage.pack(side=tk.BOTTOM, anchor='e', fill="both",padx=10,pady=10)
 
         self.stegImage = tk.Label(steg_frame, bg='blue')
         self.stegImage.pack(fill='both',expand=True)
@@ -180,12 +182,13 @@ class EncryptFrame(tk.Frame):
             self.secretImage.config(image=cached_files["secret"],width=100)
             imagehandling = ImageHandler(1)
             imagehandling.encode_image(cached_filepaths["secret"], cached_filepaths["mask"])
-            path = "samples\output.png"
-            cached_files["output"] = ImageTk.PhotoImage(image=Image.open(path).resize((240,135)))
+            path = "samples/output.png"
+            cached_files["output"] = ImageTk.PhotoImage(image=Image.open(path).resize((480,270)))
             cached_filepaths["output"] = path
-            self.stegImage.config(image=cached_files["output"], height=200, width=200)
+            self.stegImage.config(image=cached_files["output"],)
         elif imageorvideo == 'video':
-            videomerger = VideoMerger(cached_filepaths["mask"], cached_filepaths['secret_'], 1)
+            videomerger = VideoMerger(cached_filepaths["mask"], cached_filepaths['secret'], 1)
+            videomerger.encode_video()
         else:
             raise NameError("BIG BIG ERRO")
 
@@ -195,12 +198,7 @@ class EncryptFrame(tk.Frame):
 class DecryptFrame(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
-        label = tk.Label(self, text="Completion Screen, we did it!")
-        label.pack(padx=10, pady=10)
-        switch_window_button = ttk.Button(
-            self, text="Return to menu", command=lambda: controller.show_frame(ImportFrame)
-        )
-        switch_window_button.pack(side="bottom", fill=tk.X)
+        
 
 
 if __name__ == "__main__":

@@ -56,7 +56,7 @@ class ImageHandler:
         base_image_ndarray = np.array(base_image)
         mask_image_ndarray = np.array(mask_image)
 
-        encoded_image_array = encrypt_frame(base_image_ndarray, mask_image_ndarray, 3, self.secret_key)
+        encoded_image_array = encrypt_frame(base_image_ndarray, mask_image_ndarray, self.secret_key,6)
         encoded_image = Image.fromarray(encoded_image_array)
         encoded_image.save("samples/output.png")
 
