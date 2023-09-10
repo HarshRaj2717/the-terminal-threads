@@ -6,5 +6,5 @@ v.encode_video()
 v.decode_video()
 
 im = ImageHandler(2)
-im.encode_image("samples/images/high_res/secret_highres.png", "samples/images/high_res/secret_yn.png")
-im.decode_image("samples/images/high_res/secret_highres.png")
+im.encode_image("samples/images/high_res/secret_highres.png", "samples/images/high_res/mask_highres.png")
+im.decode_image("samples/output.png")

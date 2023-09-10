@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def decrypt_frame(encrypted_image: np.ndarray, bitcount: int, secret_code: int = 1) -> np.ndarray:
+def decrypt_frame(encrypted_image: np.ndarray, bitcount: int = 4, secret_code: int = 1) -> np.ndarray:
     """
     Retrieve the hidden `secret_image` from `encrypted_image` and decrypt it using `key`
 
