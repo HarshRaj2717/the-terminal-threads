@@ -58,7 +58,7 @@ class MainWindow(tk.Tk):
 
 class ImportFrame(tk.Frame):
     def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent, bg='red')
+        tk.Frame.__init__(self, parent)
         self.pack(side="top", fill="both", expand=True)
 
         title = tk.Label(self, text="TITLE", font=('Helvetica', 16, 'bold'))
@@ -71,13 +71,13 @@ class ImportFrame(tk.Frame):
         self.open_file_img = ImageTk.PhotoImage(image=Image.open("ui/assets/open_folder.png").resize((14,14)))
         
     
-        mask_frame = tk.Frame(self, bg='yellow')
+        mask_frame = tk.Frame(self,)
         mask_frame.pack(side=tk.LEFT, fill='both', expand=True)
 
-        secret_frame = tk.Frame(self, bg='purple')
+        secret_frame = tk.Frame(self)
         secret_frame.pack(side=tk.LEFT, fill='both', expand=True)
 
-        details_frame = tk.Frame(self, bg='gray')
+        details_frame = tk.Frame(self,)
         details_frame.pack(side=tk.BOTTOM, fill='both',anchor='s',ipady=40,before=mask_frame)
 
 
@@ -104,7 +104,7 @@ class ImportFrame(tk.Frame):
         self.mask_filepath,self.maskImage,'mask'))
         mask_file_btn.grid(column=2,row=0,padx=5)
 
-        self.maskImage = tk.Label(mask_frame, bg='blue',width=45,height=12)
+        self.maskImage = tk.Label(mask_frame,width=45,height=12)
         self.maskImage.grid(column=0,row=6,columnspan=4,rowspan=2,padx=40,pady=20)
         # We use the switch_window_button in order to call the show_frame() method as a lambda function
         self.encrypt_window_button = tk.Button(
@@ -175,12 +175,12 @@ class ImportFrame(tk.Frame):
             cached_filepaths[label] = path
             img_to_update.config(image=cached_files[label],width=320,height=180)
            
-        elif filepathStr.get()[-4:] == ".mp4":
+        elif filepathStr.get()[-4:] == ".mp4"  or filepathStr.get()[-4:] == ".avi":
             imageorvideo = 'video'
             # frame_extracter = frame_extraction.VideoExtractor.extract_frames()
             cached_filepaths[label] = path
             videoObj = cv2.VideoCapture(path)
-            frame_extraction_successful, first_frame = self.videoObj.read()
+            frame_extraction_successful, first_frame = videoObj.read()
             if not frame_extraction_successful:
                 print('Failed to read current frame')
                 raise Exception('Issue while reading first frame of video')
@@ -192,30 +192,33 @@ class ImportFrame(tk.Frame):
 
 class EncryptFrame(tk.Frame):
     def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent, bg='red')
+        tk.Frame.__init__(self, parent,)
         self.pack(side="top", fill="both", expand=True)
 
-        label = tk.Label(self, text="ENCRYPT FRAME", font=('Helvetica', 16, 'bold'))
-        label.pack(side=tk.TOP, anchor='n', pady=20, padx=10, fill="x")
+        top_frame = tk.Frame(self)
+        top_frame.pack(side=tk.TOP,fill='both',ipady=10)
 
-        steg_frame = tk.Frame(self, bg='grey')
+        steg_frame = tk.Frame(self)
         steg_frame.pack(side=tk.RIGHT, fill='both', expand=True)
 
-        img_frame = tk.Frame(self, bg='yellow')
+        img_frame = tk.Frame(self)
         img_frame.pack(side=tk.LEFT, fill='both', expand=True)
 
-        self.secretImage = tk.Label(img_frame, bg="green")
+        title = tk.Label(top_frame, text="ENCRYPT FRAME", font=('Helvetica', 16, 'bold'))
+        title.pack(side=tk.TOP, anchor='n', pady=5, padx=10, fill="x")
+
+        self.secretImage = tk.Label(img_frame)
         self.secretImage.pack(side=tk.BOTTOM, anchor='w', fill='both',padx=10,pady=10)
 
-        self.maskImage = tk.Label(img_frame, bg='blue')
+        self.maskImage = tk.Label(img_frame)
         self.maskImage.pack(side=tk.BOTTOM, anchor='e', fill="both",padx=10,pady=10)
 
-        self.stegImage = tk.Label(steg_frame, bg='blue')
+        self.stegImage = tk.Label(steg_frame)
         self.stegImage.pack(fill='both',expand=True)
 
-        back_button = 
+        back_button = tk.Button(top_frame,text="Back to Home",command= lambda: controller.show_frame(ImportFrame,EncryptFrame)).pack(side="right")
 
-        encrypt_button = tk.Button(img_frame, text="ENCRYPT", command=lambda: self.load_and_encrypt())
+        encrypt_button = tk.Button(steg_frame, text="ENCRYPT", command=lambda: self.load_and_encrypt())
         encrypt_button.pack(side=tk.TOP, anchor='n', padx=5, pady=10)
 
         self.imgs = {}
@@ -237,22 +240,28 @@ class EncryptFrame(tk.Frame):
 
 class DecryptFrame(tk.Frame):
     def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent, bg='green')
+        tk.Frame.__init__(self, parent)
         self.pack(side="top", fill="both", expand=True)
 
-        label = tk.Label(self, text="DECRYPT FRAME", font=('Helvetica', 16, 'bold'))
-        label.pack(side=tk.TOP, anchor='n', pady=20, padx=10, fill="x")
+        top_frame = tk.Frame(self)
+        top_frame.pack(side=tk.TOP,fill='both',ipady=10)
 
-        decrypted_frame = tk.Frame(self, bg='grey')
+        decrypted_frame = tk.Frame(self)
         decrypted_frame.pack(side=tk.LEFT, fill='both', expand=True)
 
-        steg_frame = tk.Frame(self, bg='yellow')
+        steg_frame = tk.Frame(self)
         steg_frame.pack(side=tk.RIGHT, fill='both', expand=True)
 
-        self.stegImage = tk.Label(steg_frame, bg="green")
+        title = tk.Label(top_frame, text="DECRYPT FRAME", font=('Helvetica', 16, 'bold'))
+        title.pack(side=tk.TOP, anchor='n', pady=20, padx=10, fill="x")
+
+        back_button = tk.Button(top_frame,text="Back to Home",command= lambda: controller.show_frame(ImportFrame,DecryptFrame)).pack(side="right")
+
+
+        self.stegImage = tk.Label(steg_frame)
         self.stegImage.pack(side=tk.BOTTOM, anchor='w', fill='both',padx=10,pady=10)
 
-        self.decryptedImage = tk.Label(decrypted_frame, bg='blue')
+        self.decryptedImage = tk.Label(decrypted_frame)
         self.decryptedImage.pack(side=tk.BOTTOM, anchor='e', fill="both",padx=10,pady=10)
 
         encrypt_button = tk.Button(steg_frame, text="DECRYPT", command=lambda: self.load_and_decrypt())
@@ -271,7 +280,7 @@ class DecryptFrame(tk.Frame):
             self.stegImage.config(image=cached_files["decrypted"],)
         elif imageorvideo == 'video':
             videomerger = VideoMerger(cached_filepaths["mask"], cached_filepaths['secret'], 1)
-            videomerger.encode_video()
+            videomerger.decode_video()
         
 
 
