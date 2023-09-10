@@ -73,12 +73,9 @@ class VideoExtractor(object):
 class VideoMerger(object):
     """Function of this class is to perform encoding / merging of secret video and mask video"""
 
-    def __init__(self, base_video_path, secret_video_path, secret_key) -> None:
-        self.base_video_obj = VideoExtractor(base_video_path)
-        self.secret_video_obj = VideoExtractor(secret_video_path)
-        self.output_video = None
+    def __init__(self, secret_key: int, bitcount: int) -> None:
+        self.bitcount = bitcount
         self.secret_key = secret_key
-        self.encoded_frames = []
 
     def perform_validation(self) -> bool:
         """Performs validation checks that video sizes, fps and frame counts match."""
@@ -101,15 +98,19 @@ class VideoMerger(object):
         else:
             return True
 
-    def encode_video(self):
+    def encode_video(self, mask_video_path, secret_video_path):
         """Encodes videos."""
+        self.base_video_obj = VideoExtractor(mask_video_path)
+        self.secret_video_obj = VideoExtractor(secret_video_path)
+        self.encoded_frames = []
         self.perform_validation()
         c = 0
         thresh = min((self.base_video_obj.frame_count, self.secret_video_obj.frame_count))
         while thresh != c:
 
             # call encoder here
-            enc_arr = encrypt_frame(self.base_video_obj.frames[c], self.secret_video_obj.frames[c], 4, self.secret_key)
+            enc_arr = encrypt_frame(
+                self.base_video_obj.frames[c], self.secret_video_obj.frames[c], self.bitcount, self.secret_key)
             # enc_arr = cv2.cvtColor(enc_arr, cv2.COLOR_BGR2RGB)
 
             self.encoded_frames.append(enc_arr)
@@ -125,14 +126,14 @@ class VideoMerger(object):
         out.release()
         print("Writing to output - DONE")
 
-    def decode_video(self):
+    def decode_video(self, output_video_path):
         """Decodes videos"""
-        self.output_video = VideoExtractor("samples/output.avi")
+        self.output_video = VideoExtractor(output_video_path)
         self.output_video.extract_frames()
         dec = []
         for frames in self.output_video.frames:
-            dec.append(decrypt_frame(frames, 4, self.secret_key))
-        out = cv2.VideoWriter('samples/decoded_output.avi', cv2.VideoWriter_fourcc(*'FFV1'), self.output_video.fps,
+            dec.append(decrypt_frame(frames, self.bitcount, self.secret_key))
+        out = cv2.VideoWriter('samples/output_decrypted.avi', cv2.VideoWriter_fourcc(*'FFV1'), self.output_video.fps,
                               (self.output_video.width, self.output_video.height))
         print("Writing to decoded_video")
         for img in dec:
