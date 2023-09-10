@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 
-def encrypt_frame(mask_array: np.ndarray, secret_array: np.ndarray,secret_code: int = 1, bitcount: int = 3) -> np.ndarray:
+def encrypt_frame(mask_array: np.ndarray, secret_array: np.ndarray,secret_code: int = 1, bitcount: int = 4) -> np.ndarray:
     """
     Encrypt the `secret_image` using `key` and hide it inside `mask_image`
 

@@ -17,6 +17,8 @@ Add changes in the class definitons. (Don't edit MainWindow unless u have to!)
 cached_files = {}
 cached_filepaths = {}
 imageorvideo = ""
+bitcount = 4
+key = 0
 
 
 class MainWindow(tk.Tk):
@@ -26,7 +28,7 @@ class MainWindow(tk.Tk):
         tk.Tk.__init__(self, *args, **kwargs)
         self.wm_title("Video Encrypter/Decrypter v1")
 
-        root = tk.Frame(self, height=450, width=800, bg='blue')
+        root = tk.Frame(self, height=450, width=800)
         root.pack(side="top", fill="both", expand=True)
 
         self.frames = {}
@@ -64,13 +66,20 @@ class ImportFrame(tk.Frame):
 
         self.secret_filepath = tk.StringVar(self)
         self.mask_filepath = tk.StringVar(self)
+        self.bitcount = tk.IntVar(self)
+        self.key = tk.IntVar(self)
         self.open_file_img = ImageTk.PhotoImage(image=Image.open("ui/assets/open_folder.png").resize((14,14)))
-
+        
+    
         mask_frame = tk.Frame(self, bg='yellow')
         mask_frame.pack(side=tk.LEFT, fill='both', expand=True)
 
         secret_frame = tk.Frame(self, bg='purple')
         secret_frame.pack(side=tk.LEFT, fill='both', expand=True)
+
+        details_frame = tk.Frame(self, bg='gray')
+        details_frame.pack(side=tk.BOTTOM, fill='both',anchor='s',ipady=40,before=mask_frame)
+
 
         secret_filepath_entry = tk.Entry(secret_frame, width=30,textvariable=self.secret_filepath)
         secret_filepath_entry.grid(column=1,row=0,padx=0,pady=5,sticky='E')
@@ -99,17 +108,53 @@ class ImportFrame(tk.Frame):
         self.maskImage.grid(column=0,row=6,columnspan=4,rowspan=2,padx=40,pady=20)
         # We use the switch_window_button in order to call the show_frame() method as a lambda function
         self.encrypt_window_button = tk.Button(
-            self,
+            details_frame,
             text="Import Images/Videos First!",
-            command=lambda: self.switch_to_encrypt_frame(controller),
+            command=lambda: self.switch_to_frame_and_run(controller,EncryptFrame),
+            state=tk.DISABLED
+        )
+        self.decrypt_window_button = tk.Button(
+            details_frame,
+            text="Import Mask Image First!",
+            command=lambda: self.switch_to_frame_and_run(controller,DecryptFrame),
             state=tk.DISABLED
         )
 
-        
-        self.encrypt_window_button.pack(before=mask_frame, side="bottom", anchor='s', fill='y', pady=10)
+        self.decrypt_window_button.pack(side="left",fill='both',expand=True,padx=40)
 
-    def switch_to_encrypt_frame(self, controller):
-        controller.show_frame(EncryptFrame, ImportFrame)
+        key_lbl = tk.Label(details_frame,text="Key (8 numbers): ")
+        key_lbl.pack(side='left',padx=2)
+
+        reg=details_frame.register(self.key_size_limit)
+        key_entry = tk.Entry(details_frame,textvariable=self.key,validate='key',validatecommand=(reg, '%P'),width=10)
+
+        key_entry.pack(side='left')
+
+        bit_lbl = tk.Label(details_frame,text="Bitcount: ").pack(side="left",padx=2)
+        B2 = tk.Radiobutton(details_frame, text="2", variable=self.bitcount, value=2)
+        B4 = tk.Radiobutton(details_frame, text="4", variable=self.bitcount, value=4)
+        B2.pack(side="left")
+        B4.pack(side="left")
+        B4.select()
+
+        self.encrypt_window_button.pack(side="left",fill='both',expand=True,padx=40)
+
+
+        # B6 = tk.Radiobutton(details_frame, text="6", variable=self.bitcount, value=6,command=lambda: self.update_key_and_bitcount()).pack(side='left')
+
+
+    def key_size_limit(self,input:str):
+        if len(input) <= 8 and input.isnumeric():
+           return True
+        else:
+            return False
+        ...
+    def switch_to_frame_and_run(self, controller,frame):
+        global bitcount
+        global key
+        key = int(self.key.get())
+        bitcount = self.bitcount.get()
+        controller.show_frame(frame, ImportFrame)
 
     def open_file(self, file_path_str,img_widget,label_for_cache):
         allowed_filetypes = [("Images & Videos", "*.png *.mp4 *.avi *.jpg")]
@@ -120,32 +165,29 @@ class ImportFrame(tk.Frame):
     def load_file(self,label,filepathStr,img_to_update):
         global imageorvideo
         path = filepathStr.get()
+        if self.mask_filepath.get() != "":
+            self.decrypt_window_button.config(state=tk.NORMAL,text="Ready To Decrypt!")
+            if self.mask_filepath.get() != "" and self.secret_filepath.get() != "":
+                    self.encrypt_window_button.config(state=tk.NORMAL,text="Ready To Encrypt!")
         if path[-4:] == ".png":
             imageorvideo = 'image'
             cached_files[label] = ImageTk.PhotoImage(image=Image.open(path).resize((320,180)))
             cached_filepaths[label] = path
             img_to_update.config(image=cached_files[label],width=320,height=180)
-            if self.mask_filepath.get() != "" and self.secret_filepath.get() != "":
-                self.encrypt_window_button.config(state=tk.NORMAL,text="Ready To Encrypt!")
+           
         elif filepathStr.get()[-4:] == ".mp4":
             imageorvideo = 'video'
             # frame_extracter = frame_extraction.VideoExtractor.extract_frames()
             cached_filepaths[label] = path
-            if self.mask_filepath.get() != "" and self.secret_filepath.get() != "":
-                self.encrypt_window_button.config(state=tk.NORMAL,text="Ready To Encrypt!")
             videoObj = cv2.VideoCapture(path)
-            while(videoObj.isOpened()):
-                ret, frame = videoObj.read()
-                cv2.imshow('video', frame)
-                if cv2.waitKey(1) & 0xFF == 27:
-                    # 27 == key code for escape key
-                    break
+            frame_extraction_successful, first_frame = self.videoObj.read()
+            if not frame_extraction_successful:
+                print('Failed to read current frame')
+                raise Exception('Issue while reading first frame of video')
+            first_frame = cv2.cvtColor(first_frame, cv2.COLOR_BGR2RGB)
             videoObj.release()
-            cv2.destroyAllWindows()
         else:
             raise FileExistsError("EDED")
-
-
 
 
 class EncryptFrame(tk.Frame):
@@ -162,9 +204,6 @@ class EncryptFrame(tk.Frame):
         img_frame = tk.Frame(self, bg='yellow')
         img_frame.pack(side=tk.LEFT, fill='both', expand=True)
 
-        encrypt_button = tk.Button(steg_frame, text="ENCRYPT", command=lambda: self.load_and_encrypt())
-        encrypt_button.pack(side=tk.TOP, anchor='n', padx=5, pady=10)
-
         self.secretImage = tk.Label(img_frame, bg="green")
         self.secretImage.pack(side=tk.BOTTOM, anchor='w', fill='both',padx=10,pady=10)
 
@@ -174,14 +213,19 @@ class EncryptFrame(tk.Frame):
         self.stegImage = tk.Label(steg_frame, bg='blue')
         self.stegImage.pack(fill='both',expand=True)
 
+        back_button = 
+
+        encrypt_button = tk.Button(img_frame, text="ENCRYPT", command=lambda: self.load_and_encrypt())
+        encrypt_button.pack(side=tk.TOP, anchor='n', padx=5, pady=10)
+
         self.imgs = {}
 
     def load_and_encrypt(self):
         if imageorvideo == 'image':
             self.maskImage.config(image=cached_files["mask"],width=100)
             self.secretImage.config(image=cached_files["secret"],width=100)
-            imagehandling = ImageHandler(1)
-            imagehandling.encode_image(cached_filepaths["secret"], cached_filepaths["mask"])
+            imagehandling = ImageHandler(key)
+            imagehandling.encode_image(cached_filepaths["secret"], cached_filepaths["mask"],bit_count=bitcount)
             path = "samples/output.png"
             cached_files["output"] = ImageTk.PhotoImage(image=Image.open(path).resize((480,270)))
             cached_filepaths["output"] = path
@@ -189,15 +233,45 @@ class EncryptFrame(tk.Frame):
         elif imageorvideo == 'video':
             videomerger = VideoMerger(cached_filepaths["mask"], cached_filepaths['secret'], 1)
             videomerger.encode_video()
-        else:
-            raise NameError("BIG BIG ERRO")
-
-
 
 
 class DecryptFrame(tk.Frame):
     def __init__(self, parent, controller):
-        tk.Frame.__init__(self, parent)
+        tk.Frame.__init__(self, parent, bg='green')
+        self.pack(side="top", fill="both", expand=True)
+
+        label = tk.Label(self, text="DECRYPT FRAME", font=('Helvetica', 16, 'bold'))
+        label.pack(side=tk.TOP, anchor='n', pady=20, padx=10, fill="x")
+
+        decrypted_frame = tk.Frame(self, bg='grey')
+        decrypted_frame.pack(side=tk.LEFT, fill='both', expand=True)
+
+        steg_frame = tk.Frame(self, bg='yellow')
+        steg_frame.pack(side=tk.RIGHT, fill='both', expand=True)
+
+        self.stegImage = tk.Label(steg_frame, bg="green")
+        self.stegImage.pack(side=tk.BOTTOM, anchor='w', fill='both',padx=10,pady=10)
+
+        self.decryptedImage = tk.Label(decrypted_frame, bg='blue')
+        self.decryptedImage.pack(side=tk.BOTTOM, anchor='e', fill="both",padx=10,pady=10)
+
+        encrypt_button = tk.Button(steg_frame, text="DECRYPT", command=lambda: self.load_and_decrypt())
+        encrypt_button.pack(side=tk.TOP, anchor='n', padx=5, pady=10)
+
+
+        self.imgs = {}
+    def load_and_decrypt(self):
+        if imageorvideo == 'image':
+            self.decryptedImage.config(image=cached_files["mask"],width=100)
+            imagehandling = ImageHandler(key)
+            imagehandling.decode_image(cached_filepaths["mask"])
+            path = "samples/decrypted.png"
+            cached_files["decrypted"] = ImageTk.PhotoImage(image=Image.open(path).resize((480,270)))
+            cached_filepaths["decrypted"] = path
+            self.stegImage.config(image=cached_files["decrypted"],)
+        elif imageorvideo == 'video':
+            videomerger = VideoMerger(cached_filepaths["mask"], cached_filepaths['secret'], 1)
+            videomerger.encode_video()
         
 
 
