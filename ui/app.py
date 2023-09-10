@@ -44,29 +44,41 @@ class ImportFrame(tk.Frame):
         self.pack(side="top", fill="both", expand=True)
 
         label = tk.Label(self, text="TITLE",font=('Helvetica',36,'bold'))
-        label.pack(side=tk.TOP,pady=20,padx=10,fill="x")
+        label.pack(side=tk.TOP,anchor='n',pady=20,padx=10,fill="x")
 
-        self.secret_filepath = tk.StringVar("Secret Image Filepath")
-        self.mask_filepath = tk.StringVar("Mask Image Filepath")
+        self.secret_filepath = tk.StringVar(self,"Secret Image Filepath")
+        self.mask_filepath = tk.StringVar(self,"Mask Image Filepath")
 
-        self.secret_filepath_enty = tk.Entry(self,width=50,textvariable=self.secret_filepath)
-        self.secret_filepath_enty.pack(side=tk.LEFT,anchor='nw',padx=10,pady=10)
 
-        self.mask_filepath_enty = tk.Entry(self,width=50,textvariable=self.secret_filepath)
-        self.mask_filepath_enty.pack(side=tk.LEFT,anchor='nw',padx=10,pady=10)
-
-        openFileButton = tk.Button(self,text="OPEN",command=lambda: self.open_file(self.secret_filepath,self.secretImage))
-        openFileButton.pack(side=tk.LEFT,anchor='nw',padx=5,pady=10)
-
+        window_select_frame = tk.Frame(self,bg='grey')
+        window_select_frame.pack(side=tk.BOTTOM,fill='both',ipady=30)
         
-
-        self.secretImage = tk.Label(self,bg="green")
-        self.secretImage.pack(side = "bottom", fill = "both", expand = "yes")
-
-        self.maskImage = tk.Label(self)
-        self.maskImage.pack(side = "bottom", fill = "both", expand = "yes")
-
         
+        mask_frame = tk.Frame(self,bg='yellow')
+        mask_frame.pack(side=tk.LEFT,fill='both',expand=True)
+
+        secret_frame = tk.Frame(self,bg='purple')
+        secret_frame.pack(side=tk.LEFT,fill='both',expand=True)
+
+        secret_filepath_entry = tk.Entry(secret_frame,width=50,textvariable=self.secret_filepath)
+        secret_filepath_entry.pack(side=tk.TOP,anchor='n',padx=10,pady=10)
+
+        secret_file_button = tk.Button(secret_frame,text="OPEN",command=lambda: self.open_file(self.secret_filepath,self.secretImage))
+        secret_file_button.pack(side=tk.TOP,anchor='n',padx=5,pady=10)
+
+        mask_filepath_entry = tk.Entry(mask_frame,width=50,textvariable=self.mask_filepath)
+        mask_filepath_entry.pack(side=tk.TOP,anchor='n',padx=10,pady=10)
+
+        mask_file_button = tk.Button(mask_frame,text="OPEN",command=lambda: self.open_file(self.mask_filepath,self.maskImage))
+        mask_file_button.pack(side=tk.TOP,anchor='n',padx=5,pady=10)
+
+        self.secretImage = tk.Label(secret_frame,bg="green")
+        self.secretImage.pack(side=tk.TOP,anchor='w',fill='both')
+
+        self.maskImage = tk.Label(mask_frame,bg='blue')
+        self.maskImage.pack(side=tk.TOP,anchor='e',fill="both")
+
+        self.imgs = {}
 
          # We use the switch_window_button in order to call the show_frame() method as a lambda function
         switch_window_button = tk.Button(
@@ -79,8 +91,8 @@ class ImportFrame(tk.Frame):
         imgfile = fd.askopenfile()
         filepath_to_update.set(imgfile.name)
         path = filepath_to_update.get()
-        self.img = ImageTk.PhotoImage(image=Image.open(path))
-        img_to_update.config(image=self.img)
+        self.imgs[img_to_update]= ImageTk.PhotoImage(image=Image.open(path))
+        img_to_update.config(image=self.imgs[img_to_update],height=200,width=200)
         
         
     
